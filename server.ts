@@ -169,21 +169,25 @@ async function startServer() {
     app.use(express.static("dist"));
   }
 
-  const server = app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  const tryListen = (port: number, maxRetries = 10): void => {
+    const server = app.listen(port, "0.0.0.0");
+    
+    server.on('listening', () => {
+      console.log(`Server running on http://localhost:${port}`);
+    });
 
-  server.on('error', (err: NodeJS.ErrnoException) => {
-    if (err.code === 'EADDRINUSE') {
-      console.log(`Port ${PORT} is in use, trying port ${PORT + 1}...`);
-      app.listen(PORT + 1, "0.0.0.0", () => {
-        console.log(`Server running on http://localhost:${PORT + 1}`);
-      });
-    } else {
-      console.error('Server error:', err);
-      process.exit(1);
-    }
-  });
+    server.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE' && maxRetries > 0) {
+        console.log(`Port ${port} is in use, trying port ${port + 1}...`);
+        tryListen(port + 1, maxRetries - 1);
+      } else {
+        console.error('Server error:', err);
+        process.exit(1);
+      }
+    });
+  };
+
+  tryListen(PORT);
 }
 
 startServer();
