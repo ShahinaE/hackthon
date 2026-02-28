@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import twilio from 'twilio';
 import dotenv from 'dotenv';
 
+// Server configuration with automatic port fallback
 dotenv.config();
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
